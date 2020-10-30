@@ -8,7 +8,7 @@ test('returns a URL based on the basic RequestOptions', () => {
     host: '127.0.0.1',
     path: '/resource',
   }
-  const url = getUrlByRequestOptions(options)
+  const url = getUrlByRequestOptions('http', options)
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('port', '')
@@ -21,7 +21,7 @@ test('inherits protocol and port from http.Agent, if set', () => {
     path: '/',
     agent: new HttpAgent(),
   }
-  const url = getUrlByRequestOptions(options)
+  const url = getUrlByRequestOptions('http', options)
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('protocol', 'http:')
@@ -37,7 +37,7 @@ test('inherits protocol and port from https.Agent, if set', () => {
       port: 3080,
     }),
   }
-  const url = getUrlByRequestOptions(options)
+  const url = getUrlByRequestOptions('http', options)
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('protocol', 'https:')
@@ -45,12 +45,19 @@ test('inherits protocol and port from https.Agent, if set', () => {
   expect(url).toHaveProperty('href', 'https://127.0.0.1:3080/')
 })
 
-test('resolves protocol to "http" given no explicit protocol and no certificate', () => {
+test('resolves protocol from default given no explicit protocol and no certificate', () => {
   const options: RequestOptions = {
     host: '127.0.0.1',
     path: '/',
   }
-  const url = getUrlByRequestOptions(options)
+  let url = getUrlByRequestOptions('https', options)
+
+  expect(url).toBeInstanceOf(URL)
+  expect(url).toHaveProperty('protocol', 'https:')
+  expect(url).toHaveProperty('port', '')
+  expect(url).toHaveProperty('href', 'https://127.0.0.1/')
+
+  url = getUrlByRequestOptions('http', options)
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('protocol', 'http:')
@@ -64,7 +71,7 @@ test('resolves protocol to "https" given no explicit protocol, but certificate',
     path: '/secure',
     cert: '<!-- SSL certificate -->',
   }
-  const url = getUrlByRequestOptions(options)
+  const url = getUrlByRequestOptions('http', options)
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('protocol', 'https:')
@@ -78,7 +85,7 @@ test('resolves protocol to "https" given no explicit protocol, but port is 443',
     port: 443,
     path: '/resource',
   }
-  const url = getUrlByRequestOptions(options)
+  const url = getUrlByRequestOptions('http', options)
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('port', '')
@@ -93,7 +100,7 @@ test('resolves protocol to "https" given no explicit protocol, but agent port is
     }),
     path: '/resource',
   }
-  const url = getUrlByRequestOptions(options)
+  const url = getUrlByRequestOptions('http', options)
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('port', '')
@@ -107,7 +114,7 @@ test('inherits "port" if given', () => {
     port: 4002,
     path: '/',
   }
-  const url = getUrlByRequestOptions(options)
+  const url = getUrlByRequestOptions('http', options)
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('port', '4002')
@@ -122,7 +129,7 @@ test('inherits "username" and "password"', () => {
     path: '/user',
     auth: 'admin:abc-123',
   }
-  const url = getUrlByRequestOptions(options)
+  const url = getUrlByRequestOptions('http', options)
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('username', 'admin')
@@ -132,7 +139,7 @@ test('inherits "username" and "password"', () => {
 })
 
 test('resolves hostname to localhost if none provided', () => {
-  const url = getUrlByRequestOptions({})
+  const url = getUrlByRequestOptions('http', {})
 
   expect(url).toBeInstanceOf(URL)
   expect(url).toHaveProperty('protocol', 'http:')

@@ -36,6 +36,7 @@ function resolveCallback(
  * so it always has a `URL` and `RequestOptions`.
  */
 export function normalizeHttpRequestParams(
+  defaultProtocol: string,
   ...args: HttpRequestArgs
 ): [URL, RequestOptions & RequestSelf, HttpRequestCallback?] {
   let url: URL
@@ -83,10 +84,12 @@ export function normalizeHttpRequestParams(
 
       return isObject(args[1])
         ? normalizeHttpRequestParams(
+            defaultProtocol,
             { path: legacyUrl.path, ...args[1] },
             args[2]
           )
         : normalizeHttpRequestParams(
+            defaultProtocol,
             { path: legacyUrl.path },
             args[1] as HttpRequestCallback
           )
@@ -98,10 +101,10 @@ export function normalizeHttpRequestParams(
     const resolvedUrl = new URL(legacyUrl.href)
 
     return args[1] === undefined
-      ? normalizeHttpRequestParams(resolvedUrl)
+      ? normalizeHttpRequestParams(defaultProtocol, resolvedUrl)
       : typeof args[1] === 'function'
-      ? normalizeHttpRequestParams(resolvedUrl, args[1])
-      : normalizeHttpRequestParams(resolvedUrl, args[1], args[2])
+      ? normalizeHttpRequestParams(defaultProtocol, resolvedUrl, args[1])
+      : normalizeHttpRequestParams(defaultProtocol, resolvedUrl, args[1], args[2])
   }
   // Handle a given RequestOptions object as-is
   // and derive the URL instance from it.
@@ -109,7 +112,7 @@ export function normalizeHttpRequestParams(
     options = args[0]
     debug('given request options:', options)
 
-    url = getUrlByRequestOptions(options)
+    url = getUrlByRequestOptions(defaultProtocol, options)
     debug('created a URL:', url)
 
     callback = resolveCallback(args)
